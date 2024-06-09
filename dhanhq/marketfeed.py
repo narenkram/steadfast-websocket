@@ -303,12 +303,14 @@ class DhanFeed:
                                     client_id=self.client_id)
         num_instruments_bytes = struct.pack('<I', num_instruments)
         instrument_info = b""
-        for exchange_segment, security_id in instruments:
+        for instrument in instruments:
+            exchange_segment = instrument[0]  # Accessing tuple element by index
+            security_id = instrument[1]
             instrument_info += struct.pack('<B20s', exchange_segment, security_id.encode('utf-8'))
         
-        instruments = [(0, "")]
+        # Padding with empty instruments if needed
         for i in range(100 - num_instruments):
-            instrument_info += struct.pack('<B20s', instruments[0][0], instruments[0][1].encode('utf-8'))
+            instrument_info += struct.pack('<B20s', 0, b"")
 
         subscription_packet = header + num_instruments_bytes + instrument_info
         return subscription_packet
@@ -319,7 +321,7 @@ class DhanFeed:
         unique_symbols_set.update(symbols)
         self.instruments = list(unique_symbols_set)
         if self.ws and self.ws.open:
-            asyncio.ensure_future(self.ws.send(self.create_subscription_packet(symbols, feed_request_code, subscribe=True)))
+            asyncio.ensure_future(self.ws.send(self.create_subscription_packet(symbols, feed_request_code)))
 
     def unsubscribe_symbols(self, feed_request_code, symbols):
         """Function to unsubscribe symbols from connection."""

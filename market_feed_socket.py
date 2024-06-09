@@ -7,9 +7,24 @@ import json
 client_id = "1000588551"
 access_token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJkaGFuIiwicGFydG5lcklkIjoiIiwiZXhwIjoxNzE4ODA4MzUwLCJ0b2tlbkNvbnN1bWVyVHlwZSI6IlNFTEYiLCJ3ZWJob29rVXJsIjoiIiwiZGhhbkNsaWVudElkIjoiMTAwMDU4ODU1MSJ9.dsOQ5uA9eP-2A0hUjHvwbUZ_3Cg2S_1Rr68oufBJkiDqsqvGqjrjWB_7h6sKUDEJGUMmt4UEuV-oDW-FzzvjXQ"
 
+# Mapping dictionary for exchange segments
+EXCHANGE_SEGMENT_MAP = {
+    'IDX': 0,
+    'NSE': 1,
+    'NSE_FNO': 2,
+    'NSE_CURR': 3,
+    'BSE': 4,
+    'MCX': 5,
+    'BSE_CURR': 7,
+    'BSE_FNO': 8
+}
+
 # Structure for subscribing is ("exchange_segment","security_id")
 # Maximum 100 instruments can be subscribed, then use 'subscribe_symbols' function 
 instruments = [("NSE_FNO", "1333"), ("BSE_FNO", "13")]
+
+# Convert exchange segments to integers
+instruments = [(EXCHANGE_SEGMENT_MAP[segment], security_id) for segment, security_id in instruments]
 
 # Type of data subscription
 subscription_code = marketfeed.Ticker
