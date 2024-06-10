@@ -2,6 +2,7 @@ from dhanhq import marketfeed
 import asyncio
 import redis
 import json
+import struct
 
 # Add your Dhan Client ID and Access Token
 client_id = "1000588551"
@@ -40,9 +41,27 @@ async def on_connect(instance):
     print("Connected to websocket")
 
 async def on_message(instance, message):
-    print("Received:", message)
-    # Publish message to Redis channel
-    redis_client.publish('market_feed', json.dumps(message))
+    # Assuming message is in binary format
+    response_code = message[0]
+    
+    if response_code == 2:  # Ticker Packet
+        # Unpack the binary message according to the Ticker Packet structure
+        header = struct.unpack('!B H B I', message[:8])
+        ltp = struct.unpack('!f', message[8:12])[0]
+        ltt = struct.unpack('!I', message[12:16])[0]
+        
+        print(f"Received Ticker Packet: LTP={ltp}, LTT={ltt}")
+        
+        # Publish message to Redis channel
+        redis_client.publish('market_feed', json.dumps({
+            'type': 'ticker',
+            'ltp': ltp,
+            'ltt': ltt
+        }))
+    else:
+        print("Received:", message)
+        # Publish message to Redis channel
+        redis_client.publish('market_feed', json.dumps(message))
 
 async def on_close(instance):
     print("Websocket closed.")
