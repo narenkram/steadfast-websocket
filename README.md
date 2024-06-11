@@ -10,3 +10,7 @@ Redis Required to be installed and running on port 6379
 ## Get your API Key from DhanHQ and replace API Key in market-feed-socket.py 
 
 [Link to monorepo](https://github.com/narenkram/steadfast-stoic-monorepo)
+
+# Join Our Telegram Channel
+
+Stay updated by joining our [Telegram Channel](https://t.me/steadfaststoic).
