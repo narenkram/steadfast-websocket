@@ -1,3 +1,5 @@
+## Get your API Key from DhanHQ and replace API Key in market-feed-socket.py 
+
 # DhanHQ-py : v1.3
 
 [![PyPI](https://img.shields.io/pypi/v/dhanhq.svg)](https://pypi.org/project/dhanhq/)
