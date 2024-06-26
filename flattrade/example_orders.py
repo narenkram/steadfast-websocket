@@ -1,6 +1,11 @@
 from api_helper import NorenApiPy, get_time
 import logging
 import pandas as pd
+from dotenv import load_dotenv
+import os
+
+# Load environment variables from .env file
+load_dotenv()
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -44,8 +49,8 @@ api = NorenApiPy()
 #set token and user id
 #paste the token generated using the login flow described 
 # in LOGIN FLOW of https://pi.flattrade.in/docs
-usersession='token here'
-userid = 'user id here'
+usersession=os.getenv('USERSESSION')
+userid = os.getenv('USERID')
 
 ret = api.set_session(userid= userid, password = '', usertoken= usersession)
 
