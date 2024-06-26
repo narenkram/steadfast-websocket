@@ -4,3 +4,6 @@ websocket_client
 pandas
 pyyaml
 python-dotenv
+flask
+flask-cors
+flask-socketio
