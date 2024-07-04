@@ -25,7 +25,7 @@ def open_callback():
     print('app is connected')
     
     # Subscribe to the desired symbol
-    api.subscribe(['NFO|55237'])
+    api.subscribe(['NSE|26000'])
 
 # Initialize API
 api = NorenApiPy()
