@@ -35,11 +35,24 @@ def get_credentials():
         response = requests.get('http://localhost:3000/flattrade-websocket-credentials')
         response.raise_for_status()
         credentials = response.json()
-        logging.info("Credentials retrieved successfully")
-        return credentials['usersession'], credentials['userid']
+        usersession = credentials.get('usersession', '')
+        userid = credentials.get('userid', '')
+        if usersession and userid:
+            logging.info("Valid credentials retrieved successfully")
+            return usersession, userid
+        else:
+            logging.info("Waiting for valid credentials...")
+            return None, None
     except requests.exceptions.RequestException as e:
         logging.error(f"Failed to retrieve credentials: {e}")
-        raise Exception("Failed to retrieve credentials from server")
+        return None, None
+
+async def wait_for_credentials():
+    while True:
+        usersession, userid = get_credentials()
+        if usersession and userid:
+            return usersession, userid
+        await asyncio.sleep(5)  # Wait for 5 seconds before trying again
 
 quote_queue = asyncio.Queue()
 
@@ -52,26 +65,33 @@ async def websocket_server(websocket, path):
         except websockets.exceptions.ConnectionClosed:
             break
 
+async def setup_api_connection(usersession, userid):
+    # Set up the session
+    ret = api.set_session(userid=userid, password='', usertoken=usersession)
+
+    if ret is not None:
+        # Start the websocket
+        ret = api.start_websocket(
+            order_update_callback=event_handler_order_update,
+            subscribe_callback=event_handler_quote_update,
+            socket_open_callback=open_callback
+        )
+        print(ret)
+    else:
+        raise Exception("Failed to set up API session")
+
 async def main():
     global loop
     loop = asyncio.get_running_loop()
 
     try:
-        # Get token and user id
-        usersession, userid = get_credentials()
+        # Wait for valid credentials
+        logging.info("Waiting for valid credentials...")
+        usersession, userid = await wait_for_credentials()
         logging.info(f"Using usersession: {usersession[:5]}... and userid: {userid}")
 
-        # Set up the session
-        ret = api.set_session(userid=userid, password='', usertoken=usersession)
-
-        if ret is not None:
-            # Start the websocket
-            ret = api.start_websocket(
-                order_update_callback=event_handler_order_update,
-                subscribe_callback=event_handler_quote_update,
-                socket_open_callback=open_callback
-            )
-            print(ret)
+        # Set up API connection
+        await setup_api_connection(usersession, userid)
 
         # Set up WebSocket server
         server = await websockets.serve(websocket_server, "localhost", 8765)
