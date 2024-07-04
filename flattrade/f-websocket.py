@@ -1,11 +1,8 @@
 from api_helper import NorenApiPy
-from dotenv import load_dotenv
+import requests
 import os
 import logging
 import time
-
-# Load environment variables from .env file
-load_dotenv()
 
 # Set up logging
 logging.basicConfig(level=logging.DEBUG)
@@ -31,9 +28,26 @@ def open_callback():
 # Initialize API
 api = NorenApiPy()
 
-# Set token and user id
-usersession = os.getenv('USERSESSION')
-userid = os.getenv('USERID')
+def get_credentials():
+    try:
+        response = requests.get('http://localhost:3000/flattrade-websocket-credentials')
+        response.raise_for_status()  # Raises an HTTPError for bad responses
+        credentials = response.json()
+        logging.info("Credentials retrieved successfully")
+        return credentials['usersession'], credentials['userid']
+    except requests.exceptions.RequestException as e:
+        logging.error(f"Failed to retrieve credentials: {e}")
+        raise Exception("Failed to retrieve credentials from server")
+
+try:
+    # Get token and user id
+    usersession, userid = get_credentials()
+    logging.info(f"Using usersession: {usersession[:5]}... and userid: {userid}")
+
+    # ... rest of your Python code ...
+
+except Exception as e:
+    logging.error(f"An error occurred: {e}")
 
 # Set up the session
 ret = api.set_session(userid=userid, password='', usertoken=usersession)
