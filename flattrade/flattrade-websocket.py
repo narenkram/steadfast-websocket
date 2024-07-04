@@ -79,13 +79,36 @@ def open_callback(defaultCallSecurityId, defaultPutSecurityId):
 quote_queue = asyncio.Queue()
 
 async def websocket_server(websocket, path):
-    while True:
-        try:
-            # Wait for quote updates
-            quote = await quote_queue.get()
-            await websocket.send(json.dumps(quote))
-        except websockets.exceptions.ConnectionClosed:
-            break
+    try:
+        async for message in websocket:
+            await handle_websocket_message(message)
+            
+            # Forward quote updates to the client
+            while not quote_queue.empty():
+                quote = await quote_queue.get()
+                await websocket.send(json.dumps(quote))
+    except websockets.exceptions.ConnectionClosed:
+        print("Connection closed")
+
+async def handle_websocket_message(message):
+    data = json.loads(message)
+    if 'action' in data:
+        if data['action'] == 'unsubscribe':
+            for symbol in data['symbols']:
+                api.unsubscribe([symbol])
+                print(f"Unsubscribed from {symbol}")
+        elif data['action'] == 'subscribe':
+            for symbol in data['symbols']:
+                api.subscribe([symbol])
+                print(f"Subscribed to {symbol}")
+    else:
+        # Handle the existing credential update logic
+        global usersession, userid, defaultCallSecurityId, defaultPutSecurityId
+        usersession = data.get('usersession', '')
+        userid = data.get('userid', '')
+        defaultCallSecurityId = data.get('defaultCallSecurityId', '')
+        defaultPutSecurityId = data.get('defaultPutSecurityId', '')
+        print(f"Updated credentials and security IDs: {usersession[:5]}..., {userid}, {defaultCallSecurityId}, {defaultPutSecurityId}")
 
 async def main():
     global loop
