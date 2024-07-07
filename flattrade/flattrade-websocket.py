@@ -19,7 +19,8 @@ def event_handler_order_update(message):
     print("order event: " + str(message))
 
 def event_handler_quote_update(message):
-    print("quote event: {0}".format(time.strftime('%d-%m-%Y %H:%M:%S')) + str(message))
+    print(f"quote event: {time.strftime('%d-%m-%Y %H:%M:%S')} {message}")
+    logging.info(f"Quote update received: {message}")
     asyncio.run_coroutine_threadsafe(quote_queue.put(message), loop)
 
 async def get_credentials_and_security_ids():
@@ -83,7 +84,7 @@ quote_queue = asyncio.Queue()
 async def websocket_server(websocket, path):
     try:
         async for message in websocket:
-            await handle_websocket_message(message)
+            await handle_websocket_message(websocket, message)
             
             # Forward quote updates to the client
             while not quote_queue.empty():
@@ -92,17 +93,27 @@ async def websocket_server(websocket, path):
     except websockets.exceptions.ConnectionClosed:
         print("Connection closed")
 
-async def handle_websocket_message(message):
+async def handle_websocket_message(websocket, message):
     data = json.loads(message)
     if 'action' in data:
         if data['action'] == 'unsubscribe':
             for symbol in data['symbols']:
                 api.unsubscribe([symbol])
                 print(f"Unsubscribed from {symbol}")
+                logging.info(f"Unsubscribed from {symbol}")
         elif data['action'] == 'subscribe':
             for symbol in data['symbols']:
                 api.subscribe([symbol])
                 print(f"Subscribed to {symbol}")
+                logging.info(f"Subscribed to {symbol}")
+            
+            # Add a small delay after subscribing
+            await asyncio.sleep(0.1)
+            
+            # Check for any pending quote updates
+            while not quote_queue.empty():
+                quote = await quote_queue.get()
+                await websocket.send(json.dumps(quote))
     else:
         # Handle the existing credential update logic
         global usersession, userid, defaultCallSecurityId, defaultPutSecurityId
