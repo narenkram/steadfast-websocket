@@ -62,20 +62,22 @@ async def setup_api_connection(usersession, userid, defaultCallSecurityId, defau
         ret = api.start_websocket(
             order_update_callback=event_handler_order_update,
             subscribe_callback=event_handler_quote_update,
-            socket_open_callback=lambda: open_callback(defaultCallSecurityId, defaultPutSecurityId)
+            socket_open_callback=open_callback  # No parameters needed
         )
         print(ret)
     else:
         raise Exception("Failed to set up API session")
-
-def open_callback(defaultCallSecurityId, defaultPutSecurityId):
+    
+    
+def open_callback():
     global socket_opened
     socket_opened = True
     print('app is connected')
     
-    # Subscribe to the desired symbols
-    api.subscribe(['NSE|26000', f'NFO|{defaultCallSecurityId}', f'NFO|{defaultPutSecurityId}'])
+    # Optionally, you can log or perform other actions here
+    # without subscribing to hardcoded symbols
 
+    
 quote_queue = asyncio.Queue()
 
 async def websocket_server(websocket, path):
