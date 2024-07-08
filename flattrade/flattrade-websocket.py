@@ -83,15 +83,26 @@ quote_queue = asyncio.Queue()
 
 async def websocket_server(websocket, path):
     try:
+        # Create a task to continuously send quote updates to the client
+        send_task = asyncio.create_task(send_quote_updates(websocket))
+        
         async for message in websocket:
             await handle_websocket_message(websocket, message)
-            
-            # Forward quote updates to the client
-            while not quote_queue.empty():
-                quote = await quote_queue.get()
-                await websocket.send(json.dumps(quote))
     except websockets.exceptions.ConnectionClosed:
         print("Connection closed")
+    finally:
+        # Cancel the send task when the connection is closed
+        send_task.cancel()
+
+async def send_quote_updates(websocket):
+    while True:
+        try:
+            quote = await quote_queue.get()
+            await websocket.send(json.dumps(quote))
+        except Exception as e:
+            logging.error(f"Error sending quote update: {e}")
+            # If there's an error, wait a bit before trying again
+            await asyncio.sleep(1)
 
 async def handle_websocket_message(websocket, message):
     data = json.loads(message)
