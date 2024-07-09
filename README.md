@@ -7,8 +7,6 @@ cd steadfast-websocket/flattrade
 python flattrade-websocket.py
 ```
 
-Redis Required to be installed and running on port 6379
-
 [Link to monorepo](https://github.com/narenkram/steadfast-stoic-monorepo)
 
 # Join Our Telegram Channel
