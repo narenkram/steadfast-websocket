@@ -2,7 +2,7 @@ import asyncio
 import websockets
 import json
 import logging
-from api_helper import NorenApiPy
+from api_helper import ShoonyaApiPy
 import requests
 import time
 
@@ -12,7 +12,7 @@ logging.basicConfig(level=logging.DEBUG)
 socket_opened = False
 
 # Initialize the API object
-api = NorenApiPy()
+api = ShoonyaApiPy()
 
 # Event handlers
 def event_handler_order_update(message):
