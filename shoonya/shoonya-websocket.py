@@ -148,7 +148,7 @@ async def main():
         await setup_api_connection(usersession, userid, defaultCallSecurityId, defaultPutSecurityId)
 
         # Set up WebSocket server
-        server = await websockets.serve(websocket_server, "localhost", 8765)
+        server = await websockets.serve(websocket_server, "localhost", 8766)
         await server.wait_closed()
 
     except Exception as e:
