@@ -48,14 +48,24 @@ def get_time(time_string):
 
 class ShoonyaApiPy(NorenApi):
     def __init__(self, include_eodhost=True):
-        if include_eodhost:
-            NorenApi.__init__(
-                self,
-                host="https://api.shoonya.com/NorenWClientTP/",
-                websocket="wss://api.shoonya.com/NorenWSTP/",
-                eodhost="https://api.shoonya.com/chartApi/getdata/",
+        try:
+            if include_eodhost:
+                NorenApi.__init__(
+                    self,
+                    host="https://api.shoonya.com/NorenWClientTP/",
+                    websocket="wss://api.shoonya.com/NorenWSTP/",
+                    eodhost="https://api.shoonya.com/chartApi/getdata/",
+                )
+            else:
+                NorenApi.__init__(
+                    self,
+                    host="https://api.shoonya.com/NorenWClientTP/",
+                    websocket="wss://api.shoonya.com/NorenWSTP/",
+                )
+        except TypeError as e:
+            print(
+                f"Initialization with eodhost failed: {e}. Falling back to initialization without eodhost."
             )
-        else:
             NorenApi.__init__(
                 self,
                 host="https://api.shoonya.com/NorenWClientTP/",
