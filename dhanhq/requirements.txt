@@ -1,3 +1,4 @@
 dhanhq
 websockets
+websocket_client
 requests

@@ -1,3 +1,4 @@
 NorenRestApiPy
 websockets
+websocket_client
 requests
