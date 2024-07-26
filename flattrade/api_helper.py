@@ -48,14 +48,24 @@ def get_time(time_string):
 
 class NorenApiPy(NorenApi):
     def __init__(self, include_eodhost=True):
-        if include_eodhost:
-            NorenApi.__init__(
-                self,
-                host="https://piconnect.flattrade.in/PiConnectTP/",
-                websocket="wss://piconnect.flattrade.in/PiConnectWSTp/",
-                eodhost="https://web.flattrade.in/chartApi/getdata/",
+        try:
+            if include_eodhost:
+                NorenApi.__init__(
+                    self,
+                    host="https://piconnect.flattrade.in/PiConnectTP/",
+                    websocket="wss://piconnect.flattrade.in/PiConnectWSTp/",
+                    eodhost="https://web.flattrade.in/chartApi/getdata/",
+                )
+            else:
+                NorenApi.__init__(
+                    self,
+                    host="https://piconnect.flattrade.in/PiConnectTP/",
+                    websocket="wss://piconnect.flattrade.in/PiConnectWSTp/",
+                )
+        except TypeError as e:
+            print(
+                f"Initialization with eodhost failed: {e}. Falling back to initialization without eodhost."
             )
-        else:
             NorenApi.__init__(
                 self,
                 host="https://piconnect.flattrade.in/PiConnectTP/",
