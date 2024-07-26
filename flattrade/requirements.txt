@@ -1,5 +1,3 @@
+NorenRestApiPy
 websockets
-websocket_client
 requests
-pandas
-pyyaml
