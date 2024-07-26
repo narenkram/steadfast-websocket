@@ -2,7 +2,7 @@ import asyncio
 import websockets
 import json
 import logging
-from api_helper import ShoonyaApiPy
+from NorenRestApiPy.NorenApi import NorenApi
 import requests
 import time
 
@@ -11,8 +11,12 @@ logging.basicConfig(level=logging.DEBUG)
 # Flag to tell us if the websocket is open
 socket_opened = False
 
-# Initialize the API object
-api = ShoonyaApiPy()
+# Initialize the API object with required arguments
+api = NorenApi(
+    host="https://api.shoonya.com/NorenWClientTP/",
+    websocket="wss://api.shoonya.com/NorenWSTP/",
+    eodhost="https://api.shoonya.com/chartApi/getdata/"
+)
 
 # Event handlers
 def event_handler_order_update(message):
