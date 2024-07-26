@@ -7,8 +7,8 @@ cd steadfast-websocket/flattrade
 python flattrade-websocket.py
 ```
 
-[Link to monorepo](https://github.com/narenkram/steadfast-stoic-monorepo)
+[Link to monorepo](https://github.com/narenkram/steadfast-monorepo)
 
 # Join Our Telegram Channel
 
-Stay updated by joining our [Telegram Channel](https://t.me/steadfaststoic).
+Stay updated by joining our [Telegram Channel](https://t.me/steadfastapp).
