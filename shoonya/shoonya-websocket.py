@@ -12,11 +12,18 @@ logging.basicConfig(level=logging.DEBUG)
 socket_opened = False
 
 # Initialize the API object with required arguments
-api = NorenApi(
-    host="https://api.shoonya.com/NorenWClientTP/",
-    websocket="wss://api.shoonya.com/NorenWSTP/",
-    eodhost="https://api.shoonya.com/chartApi/getdata/"
-)
+try:
+    api = NorenApi(
+        host="https://api.shoonya.com/NorenWClientTP/",
+        websocket="wss://api.shoonya.com/NorenWSTP/",
+        eodhost="https://api.shoonya.com/chartApi/getdata/"
+    )
+except TypeError:
+    # If 'eodhost' is not accepted, try without it
+    api = NorenApi(
+        host="https://api.shoonya.com/NorenWClientTP/",
+        websocket="wss://api.shoonya.com/NorenWSTP/"
+    )
 
 # Event handlers
 def event_handler_order_update(message):

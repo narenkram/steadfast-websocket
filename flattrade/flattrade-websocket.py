@@ -12,11 +12,18 @@ logging.basicConfig(level=logging.DEBUG)
 socket_opened = False
 
 # Initialize the API object with required arguments
-api = NorenApi(
-    host="https://piconnect.flattrade.in/PiConnectTP/",
-    websocket="wss://piconnect.flattrade.in/PiConnectWSTp/",
-    eodhost="https://web.flattrade.in/chartApi/getdata/"
-)
+try:
+    api = NorenApi(
+        host="https://piconnect.flattrade.in/PiConnectTP/",
+        websocket="wss://piconnect.flattrade.in/PiConnectWSTp/",
+        eodhost="https://web.flattrade.in/chartApi/getdata/"
+    )
+except TypeError:
+    # If 'eodhost' is not accepted, try without it
+    api = NorenApi(
+        host="https://piconnect.flattrade.in/PiConnectTP/",
+        websocket="wss://piconnect.flattrade.in/PiConnectWSTp/"
+    )
 
 # Event handlers
 def event_handler_order_update(message):
