@@ -10,9 +10,9 @@ logging.basicConfig(level=logging.DEBUG)
 # Flag to tell us if the websocket is open
 socket_opened = False
 
-# Add your Dhan Client ID and Access Token
-client_id = "Your Dhan Client ID"
-access_token = "Your Dhan Access Token"
+# Remove hardcoded Dhan Client ID and Access Token
+client_id = ""
+access_token = ""
 
 # Structure for subscribing is ("exchange_segment","security_id")
 instruments = [(1, "1333"), (0, "13")]
@@ -20,22 +20,18 @@ instruments = [(1, "1333"), (0, "13")]
 # Type of data subscription
 subscription_code = marketfeed.Ticker
 
-
 # Event handlers
 async def on_connect(instance):
     global socket_opened
     socket_opened = True
     print("Connected to websocket")
 
-
 async def on_message(instance, message):
     print("Received:", message)
     logging.info(f"Quote update received: {message}")
     await quote_queue.put(message)
 
-
 quote_queue = asyncio.Queue()
-
 
 async def get_credentials_and_security_ids():
     try:
@@ -59,7 +55,6 @@ async def get_credentials_and_security_ids():
         logging.error(f"Failed to retrieve data: {e}")
         return None, None, None, None
 
-
 async def wait_for_data():
     while True:
         accessToken, clientId, instruments, subscription_code = (
@@ -69,12 +64,11 @@ async def wait_for_data():
             return accessToken, clientId, instruments, subscription_code
         await asyncio.sleep(5)  # Wait for 5 seconds before trying again
 
-
 async def websocket_server(websocket, path):
     try:
         # Create a task to continuously send quote updates to the client
         send_task = asyncio.create_task(send_quote_updates(websocket))
-
+        
         async for message in websocket:
             await handle_websocket_message(websocket, message)
     except websockets.exceptions.ConnectionClosed:
@@ -82,7 +76,6 @@ async def websocket_server(websocket, path):
     finally:
         # Cancel the send task when the connection is closed
         send_task.cancel()
-
 
 async def send_quote_updates(websocket):
     while True:
@@ -93,7 +86,6 @@ async def send_quote_updates(websocket):
             logging.error(f"Error sending quote update: {e}")
             # If there's an error, wait a bit before trying again
             await asyncio.sleep(1)
-
 
 async def handle_websocket_message(websocket, message):
     data = json.loads(message)
@@ -123,7 +115,6 @@ async def handle_websocket_message(websocket, message):
         access_token = data.get("access_token", "")
         print(f"Updated credentials: {client_id[:5]}..., {access_token[:5]}...")
 
-
 async def main():
     global loop
     loop = asyncio.get_running_loop()
@@ -152,7 +143,6 @@ async def main():
 
     except Exception as e:
         logging.error(f"An error occurred: {e}")
-
 
 if __name__ == "__main__":
     asyncio.run(main())
