@@ -1,4 +1,4 @@
-NorenRestApiPy
+# pip install --no-deps NorenRestApi
 websockets
 websocket_client
 requests
