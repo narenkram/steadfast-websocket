@@ -72,15 +72,7 @@ class DhanFeed:
         self.on_message = on_message
         self.on_close = on_close
         self.on_connect = on_connect
-
-        try:
-            self.loop = asyncio.get_event_loop()
-        except RuntimeError as e:
-            if str(e).startswith('There is no current event loop in thread'):
-                self.loop = asyncio.new_event_loop()
-                asyncio.set_event_loop(self.loop)
-            else:
-                raise
+        self.loop = asyncio.get_event_loop()
 
         if self.on_connect:
             self.connect()

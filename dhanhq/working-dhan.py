@@ -53,6 +53,16 @@ async def main():
             on_connect=on_connect,
             on_message=on_message)
 
+        # Initialize the event loop
+        try:
+            loop = asyncio.get_event_loop()
+        except RuntimeError as e:
+            if str(e).startswith('There is no current event loop in thread'):
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+            else:
+                raise
+
         # Ensure the DhanFeed connection is awaited
         await feed.connect()
 
