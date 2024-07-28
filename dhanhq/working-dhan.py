@@ -2,13 +2,21 @@ import asyncio
 import websockets
 import json
 import logging
+import aiohttp  # Add this import
 from dhanhq import marketfeed
 
 logging.basicConfig(level=logging.DEBUG)
 
-# Add your Dhan Client ID and Access Token
-client_id = "1000588551"
-access_token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJkaGFuIiwicGFydG5lcklkIjoiIiwiZXhwIjoxNzIzMzE3NjQzLCJ0b2tlbkNvbnN1bWVyVHlwZSI6IlNFTEYiLCJ3ZWJob29rVXJsIjoiIiwiZGhhbkNsaWVudElkIjoiMTAwMDU4ODU1MSJ9.-wEnKfQlLD3A8kiPj34E9Ck-5MLEJOMMAjQAyHBUsaNiT3nJNIQzXuZlrKXgwYqJuZcAvNbvrQ_7gffaENFNrA"
+# Function to fetch credentials from the server
+async def fetch_credentials():
+    async with aiohttp.ClientSession() as session:
+        async with session.get('http://localhost:3000/dhan-websocket-data') as response:
+            if response.status == 200:
+                data = await response.json()
+                return data['clientId'], data['accessToken']
+            else:
+                logging.error(f"Failed to fetch credentials: {response.status}")
+                return None, None
 
 # Structure for subscribing is ("exchange_segment","security_id")
 exchange_segment = 0
@@ -26,13 +34,6 @@ async def on_message(instance, message):
 
 print("Subscription code :", subscription_code)
 
-feed = marketfeed.DhanFeed(client_id,
-    access_token,
-    instruments,
-    subscription_code,
-    on_connect=on_connect,
-    on_message=on_message)
-
 async def websocket_server(websocket, path):
     try:
         async for message in websocket:
@@ -42,6 +43,19 @@ async def websocket_server(websocket, path):
 
 async def main():
     try:
+        # Fetch credentials from the server
+        client_id, access_token = await fetch_credentials()
+        if not client_id or not access_token:
+            logging.error("Missing client_id or access_token")
+            return
+
+        feed = marketfeed.DhanFeed(client_id,
+            access_token,
+            instruments,
+            subscription_code,
+            on_connect=on_connect,
+            on_message=on_message)
+
         # Ensure the DhanFeed connection is awaited
         await feed.connect()
 
