@@ -9,14 +9,25 @@ logging.basicConfig(level=logging.DEBUG)
 
 # Function to fetch credentials and subscription details from the server
 async def fetch_credentials():
-    async with aiohttp.ClientSession() as session:
-        async with session.get('http://localhost:3000/dhan-websocket-data') as response:
-            if response.status == 200:
-                data = await response.json()
-                return data['clientId'], data['accessToken'], data['exchangeSegment'], data['securityId']
-            else:
-                logging.error(f"Failed to fetch credentials: {response.status}")
-                return None, None, None, None
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.get('http://localhost:3000/dhan-websocket-data') as response:
+                if response.status == 200:
+                    data = await response.json()
+                    return data['clientId'], data['accessToken'], data['exchangeSegment'], data['securityId']
+                else:
+                    logging.error(f"Failed to fetch credentials: {response.status}")
+                    return None, None, None, None
+    except aiohttp.ClientError as e:
+        logging.error(f"Failed to retrieve data: {e}")
+        return None, None, None, None
+
+async def wait_for_data():
+    while True:
+        client_id, access_token, exchange_segment, security_id = await fetch_credentials()
+        if client_id and access_token and exchange_segment is not None and security_id is not None:
+            return client_id, access_token, exchange_segment, security_id
+        await asyncio.sleep(5)  # Wait for 5 seconds before trying again
 
 # Type of data subscription
 subscription_code = Ticker
@@ -38,11 +49,10 @@ async def websocket_server(websocket, path):
 
 async def main():
     try:
-        # Fetch credentials and subscription details from the server
-        client_id, access_token, exchange_segment, security_id = await fetch_credentials()
-        if not client_id or not access_token or exchange_segment is None or security_id is None:
-            logging.error("Missing client_id, access_token, exchange_segment, or security_id")
-            return
+        # Wait for valid credentials and subscription details from the server
+        logging.info("Waiting for valid data...")
+        client_id, access_token, exchange_segment, security_id = await wait_for_data()
+        logging.info(f"Using client_id: {client_id[:5]}..., access_token: {access_token[:5]}..., exchange_segment: {exchange_segment}, security_id: {security_id}")
 
         instruments = [(str(exchange_segment), str(security_id))]  # Ensure these are strings
 
