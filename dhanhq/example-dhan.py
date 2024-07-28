@@ -1,69 +1,54 @@
+import requests
 import asyncio
 import websockets
 import json
-import logging
 from dhanhq import marketfeed
-import requests
+import logging
 
 logging.basicConfig(level=logging.DEBUG)
 
-# Flag to tell us if the websocket is open
-socket_opened = False
-
-# Structure for subscribing is ("exchange_segment","security_id")
-instruments = [(1, "1333"), (0, "13")]
-
-# Type of data subscription
-subscription_code = marketfeed.Ticker
-
-# Event handlers
-async def on_connect(instance):
-    global socket_opened
-    socket_opened = True
-    print("Connected to websocket")
-
-async def on_message(instance, message):
-    print("Received:", message)
-    logging.info(f"Quote update received: {message}")
-    await quote_queue.put(message)
-
-quote_queue = asyncio.Queue()
-
-async def get_credentials_and_security_ids():
+async def get_credentials():
     try:
         response = await asyncio.get_event_loop().run_in_executor(
             None, lambda: requests.get("http://localhost:3000/dhan-websocket-data")
         )
         response.raise_for_status()
         data = response.json()
-        accessToken = data.get("accessToken", "")
-        clientId = data.get("clientId", "")
-        instruments = data.get("instruments", "")
+        logging.debug(f"Received data: {data}")
+        client_id = data.get("clientId", "")
+        access_token = data.get("accessToken", "")
 
-        if accessToken and clientId and instruments:
+        if client_id and access_token:
             logging.info("Valid data retrieved successfully")
-            return accessToken, clientId, instruments
+            return client_id, access_token
         else:
             logging.info("Waiting for valid data...")
-            return None, None, None
+            return None, None
     except requests.exceptions.RequestException as e:
         logging.error(f"Failed to retrieve data: {e}")
-        return None, None, None
+        return None, None
 
 async def wait_for_data():
     while True:
-        accessToken, clientId, instruments = (
-            await get_credentials_and_security_ids()
-        )
-        if accessToken and clientId and instruments:
-            return accessToken, clientId, instruments
+        client_id, access_token = await get_credentials()
+        if client_id and access_token:
+            return client_id, access_token
         await asyncio.sleep(5)  # Wait for 5 seconds before trying again
+
+async def on_connect(instance):
+    print("Connected to websocket")
+
+async def on_message(instance, message):
+    print("Received:", message)
+    await quote_queue.put(message)
+
+quote_queue = asyncio.Queue()
 
 async def websocket_server(websocket, path):
     try:
         # Create a task to continuously send quote updates to the client
         send_task = asyncio.create_task(send_quote_updates(websocket))
-        
+
         async for message in websocket:
             await handle_websocket_message(websocket, message)
     except websockets.exceptions.ConnectionClosed:
@@ -87,12 +72,12 @@ async def handle_websocket_message(websocket, message):
     if "action" in data:
         if data["action"] == "unsubscribe":
             for symbol in data["symbols"]:
-                # Unsubscribe logic for Dhan API
+                # Unsubscribe logic here
                 print(f"Unsubscribed from {symbol}")
                 logging.info(f"Unsubscribed from {symbol}")
         elif data["action"] == "subscribe":
             for symbol in data["symbols"]:
-                # Subscribe logic for Dhan API
+                # Subscribe logic here
                 print(f"Subscribed to {symbol}")
                 logging.info(f"Subscribed to {symbol}")
 
@@ -106,31 +91,38 @@ async def handle_websocket_message(websocket, message):
     else:
         # Handle the existing credential update logic
         global client_id, access_token
-        client_id = data.get("client_id", "")
-        access_token = data.get("access_token", "")
-        print(f"Updated credentials: {client_id[:5]}..., {access_token[:5]}...")
+        client_id = data.get("clientId", "")
+        access_token = data.get("accessToken", "")
+        print(f"Updated credentials: {client_id}, {access_token[:5]}...")
 
 async def main():
     global loop
     loop = asyncio.get_running_loop()
 
     try:
-        # Wait for valid credentials and security IDs
+        # Wait for valid credentials
         logging.info("Waiting for valid data...")
-        accessToken, clientId, instruments, subscription_code = await wait_for_data()
-        logging.info(
-            f"Using accessToken: {accessToken[:5]}..., clientId: {clientId}, instruments: {instruments}, subscription_code: {subscription_code}"
-        )
+        client_id, access_token = await wait_for_data()
+        logging.info(f"Using client_id: {client_id}, access_token: {access_token[:5]}...")
 
-        # Set up Dhan market feed connection
+        exchange_segment = 0
+        security_id = "25"
+        instruments = [(exchange_segment, security_id)]
+        subscription_code = marketfeed.Ticker
+
+        print("Subscription code :", subscription_code)
+
         feed = marketfeed.DhanFeed(
-            clientId,
-            accessToken,
+            client_id,
+            access_token,
             instruments,
             subscription_code,
             on_connect=on_connect,
-            on_message=on_message,
+            on_message=on_message
         )
+
+        # Start the feed in a separate task
+        asyncio.create_task(feed.run_forever())
 
         # Set up WebSocket server
         server = await websockets.serve(websocket_server, "localhost", 8767)
