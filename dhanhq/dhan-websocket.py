@@ -7,6 +7,9 @@ from marketfeed import DhanFeed, Ticker
 
 logging.basicConfig(level=logging.DEBUG)
 
+# Queue to hold messages from Dhan feed
+message_queue = asyncio.Queue()
+
 # Function to fetch credentials and subscription details from the server
 def fetch_credentials():
     try:
@@ -33,6 +36,7 @@ async def on_connect(instance):
 
 async def on_message(instance, message):
     print("Received:", message)
+    await message_queue.put(message)  # Put the message into the queue
 
 print("Subscription code :", subscription_code)
 
@@ -51,8 +55,9 @@ async def setup_api_connection(client_id, access_token, exchange_segment, securi
 
 async def websocket_server(websocket, path):
     try:
-        async for message in websocket:
-            print(f"Received message: {message}")
+        while True:
+            message = await message_queue.get()  # Get message from the queue
+            await websocket.send(json.dumps(message))  # Send message to the client
     except websockets.exceptions.ConnectionClosed:
         print("Connection closed")
 
