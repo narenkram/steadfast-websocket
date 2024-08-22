@@ -3,14 +3,14 @@ import websockets
 import json
 import logging
 
-# Using the NorenRestApi latest package (NorenRestApiPy is class name, although there is a separate package with the same name NorenRestApiPy - older version, Don't get confused, we don't want NorenRestApiPy old package, we want NorenRestApi)
-# This package 'NorenRestApi' has to be installed without it's dependencies, otherwise it will not work, So we have added pip install --no-deps NorenRestApi in install-all.bat file
-# DO NOT CHANGE NorenRestApiPy to NorenRestApi
+""" Using the NorenRestApi latest package (NorenRestApiPy is class name, although there is a separate package with the same name NorenRestApiPy - older version, Don't get confused, we don't want NorenRestApiPy old package, we want NorenRestApi)
+This package 'NorenRestApi' has to be installed without it's dependencies, otherwise it will not work, So we have added pip install --no-deps NorenRestApi in install-all.bat file
+DO NOT CHANGE NorenRestApiPy to NorenRestApi """
 from NorenRestApiPy.NorenApi import NorenApi
 import requests
 import time
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 
 # Flag to tell us if the websocket is open
 socket_opened = False
@@ -37,7 +37,7 @@ def event_handler_order_update(message):
 
 def event_handler_quote_update(message):
     print(f"quote event: {time.strftime('%d-%m-%Y %H:%M:%S')} {message}")
-    logging.info(f"Quote update received: {message}")
+    # logging.info(f"Quote update received: {message}")
     asyncio.run_coroutine_threadsafe(quote_queue.put(message), loop)
 
 
@@ -50,32 +50,30 @@ async def get_credentials_and_security_ids():
         data = response.json()
         usersession = data.get("usersession", "")
         userid = data.get("userid", "")
-        defaultCallSecurityId = data.get("defaultCallSecurityId", "")
-        defaultPutSecurityId = data.get("defaultPutSecurityId", "")
 
-        if usersession and userid and defaultCallSecurityId and defaultPutSecurityId:
+        if usersession and userid:
             logging.info("Valid data retrieved successfully")
-            return usersession, userid, defaultCallSecurityId, defaultPutSecurityId
+            return usersession, userid
         else:
             logging.info("Waiting for valid data...")
-            return None, None, None, None
+            return None, None
     except requests.exceptions.RequestException as e:
         logging.error(f"Failed to retrieve data: {e}")
-        return None, None, None, None
+        return None, None
 
 
 async def wait_for_data():
     while True:
-        usersession, userid, defaultCallSecurityId, defaultPutSecurityId = (
+        usersession, userid = (
             await get_credentials_and_security_ids()
         )
-        if usersession and userid and defaultCallSecurityId and defaultPutSecurityId:
-            return usersession, userid, defaultCallSecurityId, defaultPutSecurityId
-        await asyncio.sleep(5)  # Wait for 5 seconds before trying again
+        if usersession and userid:
+            return usersession, userid
+        await asyncio.sleep(5)  
 
 
 async def setup_api_connection(
-    usersession, userid, defaultCallSecurityId, defaultPutSecurityId
+    usersession, userid
 ):
     global api
     # Set up the session
@@ -136,13 +134,13 @@ async def handle_websocket_message(websocket, message):
         if data["action"] == "unsubscribe":
             for symbol in data["symbols"]:
                 api.unsubscribe([symbol])
-                print(f"Unsubscribed from {symbol}")
-                logging.info(f"Unsubscribed from {symbol}")
+                print(f"\nUnsubscribed from {symbol}")
+                # logging.info(f"Unsubscribed from {symbol}")
         elif data["action"] == "subscribe":
             for symbol in data["symbols"]:
                 api.subscribe([symbol])
-                print(f"Subscribed to {symbol}")
-                logging.info(f"Subscribed to {symbol}")
+                print(f"\nSubscribed to {symbol}")
+                # logging.info(f"Subscribed to {symbol}")
 
             # Add a small delay after subscribing
             await asyncio.sleep(0.1)
@@ -153,13 +151,11 @@ async def handle_websocket_message(websocket, message):
                 await websocket.send(json.dumps(quote))
     else:
         # Handle the existing credential update logic
-        global usersession, userid, defaultCallSecurityId, defaultPutSecurityId
+        global usersession, userid
         usersession = data.get("usersession", "")
         userid = data.get("userid", "")
-        defaultCallSecurityId = data.get("defaultCallSecurityId", "")
-        defaultPutSecurityId = data.get("defaultPutSecurityId", "")
         print(
-            f"Updated credentials and security IDs: {usersession[:5]}..., {userid}, {defaultCallSecurityId}, {defaultPutSecurityId}"
+            f"Updated credentials and security IDs: {usersession[:5]}...{usersession[-5:]}, {userid[:2]}....{userid[-2:]}"
         )
 
 
@@ -170,16 +166,16 @@ async def main():
     try:
         # Wait for valid credentials and security IDs
         logging.info("Waiting for valid data...")
-        usersession, userid, defaultCallSecurityId, defaultPutSecurityId = (
+        usersession, userid= (
             await wait_for_data()
         )
         logging.info(
-            f"Using usersession: {usersession[:5]}..., userid: {userid}, defaultCallSecurityId: {defaultCallSecurityId}, defaultPutSecurityId: {defaultPutSecurityId}"
+            f"Using usersession: {usersession[:5]}...{usersession[-5:]}, userid: {userid[:2]}....{userid[-2:]}"
         )
 
         # Set up API connection
         await setup_api_connection(
-            usersession, userid, defaultCallSecurityId, defaultPutSecurityId
+            usersession, userid
         )
 
         # Set up WebSocket server
