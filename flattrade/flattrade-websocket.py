@@ -44,7 +44,7 @@ def event_handler_quote_update(message):
 async def get_credentials_and_security_ids():
     try:
         response = await asyncio.get_event_loop().run_in_executor(
-            None, lambda: requests.get("http://localhost:3000/flattrade-websocket-data")
+            None, lambda: requests.get("http://localhost:3000/flattrade/websocketData")
         )
         response.raise_for_status()
         data = response.json()
