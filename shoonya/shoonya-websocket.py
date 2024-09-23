@@ -133,12 +133,12 @@ async def handle_websocket_message(websocket, message):
     if "action" in data:
         if data["action"] == "unsubscribe":
             for symbol in data["symbols"]:
-                api.unsubscribe([symbol])
+                api.unsubscribe(instrument=[symbol], feed_type=2)
                 print(f"\nUnsubscribed from {symbol}")
                 # logging.info(f"Unsubscribed from {symbol}")
         elif data["action"] == "subscribe":
             for symbol in data["symbols"]:
-                api.subscribe([symbol])
+                api.subscribe(instrument=[symbol], feed_type=2)
                 print(f"\nSubscribed to {symbol}")
                 # logging.info(f"Subscribed to {symbol}")
 
