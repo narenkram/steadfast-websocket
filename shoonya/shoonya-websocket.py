@@ -64,17 +64,13 @@ async def get_credentials_and_security_ids():
 
 async def wait_for_data():
     while True:
-        usersession, userid = (
-            await get_credentials_and_security_ids()
-        )
+        usersession, userid = await get_credentials_and_security_ids()
         if usersession and userid:
             return usersession, userid
-        await asyncio.sleep(5) 
+        await asyncio.sleep(5)
 
 
-async def setup_api_connection(
-    usersession, userid
-):
+async def setup_api_connection(usersession, userid):
     global api
     # Set up the session
     ret = api.set_session(userid=userid, password="", usertoken=usersession)
@@ -166,20 +162,16 @@ async def main():
     try:
         # Wait for valid credentials and security IDs
         logging.info("Waiting for valid data...")
-        usersession, userid = (
-            await wait_for_data()
-        )
+        usersession, userid = await wait_for_data()
         logging.info(
             f"Using usersession: {usersession[:5]}...{usersession[-5:]}, userid: {userid[:2]}....{userid[-2:]}"
         )
 
         # Set up API connection
-        await setup_api_connection(
-            usersession, userid
-        )
+        await setup_api_connection(usersession, userid)
 
         # Set up WebSocket server
-        server = await websockets.serve(websocket_server, "localhost", 8766)
+        server = await websockets.serve(websocket_server, "0.0.0.0", 8766)
         await server.wait_closed()
 
     except Exception as e:
