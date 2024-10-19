@@ -2,6 +2,7 @@ import asyncio
 import websockets
 import json
 import logging
+from config import SHOONYA_WEBSOCKET_DATA_ENDPOINT, WS_HOST, SHOONYA_WS_PORT
 
 """ Using the NorenRestApi latest package (NorenRestApiPy is class name, although there is a separate package with the same name NorenRestApiPy - older version, Don't get confused, we don't want NorenRestApiPy old package, we want NorenRestApi)
 This package 'NorenRestApi' has to be installed without it's dependencies, otherwise it will not work, So we have added pip install --no-deps NorenRestApi in install-all.bat file
@@ -44,7 +45,7 @@ def event_handler_quote_update(message):
 async def get_credentials_and_security_ids():
     try:
         response = await asyncio.get_event_loop().run_in_executor(
-            None, lambda: requests.get("http://localhost:3000/shoonya/websocketData")
+            None, lambda: requests.get(SHOONYA_WEBSOCKET_DATA_ENDPOINT)
         )
         response.raise_for_status()
         data = response.json()
@@ -166,7 +167,7 @@ async def main():
             f"Using usersession: {usersession[:5]}...{usersession[-5:]}, userid: {userid[:2]}....{userid[-2:]}"
         )
         await setup_api_connection(usersession, userid)
-        server = await websockets.serve(websocket_server, "localhost", 8766)
+        server = await websockets.serve(websocket_server, WS_HOST, SHOONYA_WS_PORT)
         await server.wait_closed()
     except Exception as e:
         logging.error(f"An error occurred in Shoonya WebSocket: {e}")
