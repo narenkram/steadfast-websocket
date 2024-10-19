@@ -26,8 +26,8 @@ jobs:
           SSH_AUTH_SOCK: /tmp/ssh_agent.sock
         run: |
           ssh-agent -a $SSH_AUTH_SOCK > /dev/null
-          ssh-add - <<< "${{ secrets.SERVER_SSH_KEY }}"
-          ssh-add -l -E md5
+          ssh-add - <<< "${{ secrets.SERVER_DEPLOY_KEY }}"
+          ssh-add -l -E sha256
 
       - name: Deploy to server
         env:
