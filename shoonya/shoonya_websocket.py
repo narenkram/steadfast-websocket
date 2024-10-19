@@ -18,15 +18,15 @@ socket_opened = False
 # Initialize the API object with required arguments
 try:
     api = NorenApi(
-        host="https://piconnect.flattrade.in/PiConnectTP/",
-        websocket="wss://piconnect.flattrade.in/PiConnectWSTp/",
-        eodhost="https://web.flattrade.in/chartApi/getdata/",
+        host="https://api.shoonya.com/NorenWClientTP/",
+        websocket="wss://api.shoonya.com/NorenWSTP/",
+        eodhost="https://api.shoonya.com/chartApi/getdata/",
     )
 except TypeError:
     # If 'eodhost' is not accepted, try without it
     api = NorenApi(
-        host="https://piconnect.flattrade.in/PiConnectTP/",
-        websocket="wss://piconnect.flattrade.in/PiConnectWSTp/",
+        host="https://api.shoonya.com/NorenWClientTP/",
+        websocket="wss://api.shoonya.com/NorenWSTP/",
     )
 
 
@@ -44,7 +44,7 @@ def event_handler_quote_update(message):
 async def get_credentials_and_security_ids():
     try:
         response = await asyncio.get_event_loop().run_in_executor(
-            None, lambda: requests.get("http://localhost:3000/flattrade/websocketData")
+            None, lambda: requests.get("http://localhost:3000/shoonya/websocketData")
         )
         response.raise_for_status()
         data = response.json()
@@ -64,17 +64,13 @@ async def get_credentials_and_security_ids():
 
 async def wait_for_data():
     while True:
-        usersession, userid = (
-            await get_credentials_and_security_ids()
-        )
+        usersession, userid = await get_credentials_and_security_ids()
         if usersession and userid:
             return usersession, userid
-        await asyncio.sleep(5)  
+        await asyncio.sleep(5)
 
 
-async def setup_api_connection(
-    usersession, userid
-):
+async def setup_api_connection(usersession, userid):
     global api
     # Set up the session
     ret = api.set_session(userid=userid, password="", usertoken=usersession)
@@ -164,26 +160,16 @@ async def main():
     loop = asyncio.get_running_loop()
 
     try:
-        # Wait for valid credentials and security IDs
-        logging.info("Waiting for valid data...")
-        usersession, userid= (
-            await wait_for_data()
-        )
+        logging.info("Starting Shoonya WebSocket...")
+        usersession, userid = await wait_for_data()
         logging.info(
             f"Using usersession: {usersession[:5]}...{usersession[-5:]}, userid: {userid[:2]}....{userid[-2:]}"
         )
-
-        # Set up API connection
-        await setup_api_connection(
-            usersession, userid
-        )
-
-        # Set up WebSocket server
-        server = await websockets.serve(websocket_server, "localhost", 8765)
+        await setup_api_connection(usersession, userid)
+        server = await websockets.serve(websocket_server, "localhost", 8766)
         await server.wait_closed()
-
     except Exception as e:
-        logging.error(f"An error occurred: {e}")
+        logging.error(f"An error occurred in Shoonya WebSocket: {e}")
 
 
 if __name__ == "__main__":

@@ -1,10 +1,9 @@
 # Steadfast Websocket
 
-To run the websocket server, navigate to the steadfast-websocket directory and use the following commands:
+To run both WebSocket servers, navigate to the steadfast-websocket directory and use the following command:
 
 ```bash
-cd steadfast-websocket/flattrade
-python flattrade-websocket.py
+python main.py
 ```
 
 [Link to monorepo](https://github.com/narenkram/steadfast-monorepo)
