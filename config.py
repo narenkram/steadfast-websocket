@@ -1,7 +1,7 @@
 import os
 
 # Determine the environment
-ENV = os.getenv("ENV", "development")
+ENV = os.getenv("ENV", "production")
 
 if ENV == "production":
     # Production settings
