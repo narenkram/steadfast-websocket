@@ -21,28 +21,23 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
+      - name: Setup SSH Agent
+        env:
+          SSH_AUTH_SOCK: /tmp/ssh_agent.sock
+        run: |
+          ssh-agent -a $SSH_AUTH_SOCK > /dev/null
+          ssh-add - <<< "${{ secrets.SERVER_SSH_KEY }}"
+
       - name: Deploy to server
         env:
-          PRIVATE_KEY: ${{ secrets.SERVER_SSH_KEY }}
+          SSH_AUTH_SOCK: /tmp/ssh_agent.sock
           HOST: ${{ secrets.SERVER_HOST }}
           USER: ${{ secrets.SERVER_USER }}
         run: |
-          echo "Debugging: Checking if secrets are set"
-          if [ -z "$PRIVATE_KEY" ]; then echo "PRIVATE_KEY is not set"; else echo "PRIVATE_KEY is set"; fi
-          if [ -z "$HOST" ]; then echo "HOST is not set"; else echo "HOST is set"; fi
-          if [ -z "$USER" ]; then echo "USER is not set"; else echo "USER is set"; fi
-
-          echo "$PRIVATE_KEY" > private_key
-          chmod 600 private_key
-          echo "Private key file contents (first line):"
-          head -n 1 private_key
-          echo "Private key file permissions:"
-          ls -l private_key
-
           echo "Attempting to connect to ${USER}@${HOST}..."
-          ssh -i private_key -o StrictHostKeyChecking=no -v ${USER}@${HOST} 'echo "SSH connection successful"'
-          scp -i private_key -o StrictHostKeyChecking=no -r ./* ${USER}@${HOST}:/root/steadfast-websocket/
-          ssh -i private_key -o StrictHostKeyChecking=no ${USER}@${HOST} '
+          ssh -o StrictHostKeyChecking=no -v ${USER}@${HOST} 'echo "SSH connection successful"'
+          scp -o StrictHostKeyChecking=no -r ./* ${USER}@${HOST}:/root/steadfast-websocket/
+          ssh -o StrictHostKeyChecking=no ${USER}@${HOST} '
             cd /root/steadfast-websocket &&
             source venv/bin/activate &&
             pip install -r requirements.txt &&
