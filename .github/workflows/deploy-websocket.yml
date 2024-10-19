@@ -27,7 +27,14 @@ jobs:
           HOST: ${{ secrets.SERVER_HOST }}
           USER: ${{ secrets.SERVER_USER }}
         run: |
+          echo "Debugging: Checking if secrets are set"
+          if [ -z "$PRIVATE_KEY" ]; then echo "PRIVATE_KEY is not set"; else echo "PRIVATE_KEY is set"; fi
+          if [ -z "$HOST" ]; then echo "HOST is not set"; else echo "HOST is set"; fi
+          if [ -z "$USER" ]; then echo "USER is not set"; else echo "USER is set"; fi
+          
           echo "$PRIVATE_KEY" > private_key && chmod 600 private_key
+          echo "Attempting to connect to ${USER}@${HOST}..."
+          ssh -i private_key -o StrictHostKeyChecking=no -v ${USER}@${HOST} 'echo "SSH connection successful"'
           scp -i private_key -o StrictHostKeyChecking=no -r ./* ${USER}@${HOST}:/root/steadfast-websocket/
           ssh -i private_key -o StrictHostKeyChecking=no ${USER}@${HOST} '
             cd /root/steadfast-websocket &&
