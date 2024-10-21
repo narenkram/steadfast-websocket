@@ -43,5 +43,12 @@ jobs:
             echo "ENV=production" > .env &&
             source venv/bin/activate &&
             pip install -r requirements.txt &&
-            sudo systemctl restart steadfast_websocket.service
+            echo "Checking if steadfast_websocket service is running..." &&
+            if sudo systemctl is-active --quiet steadfast_websocket.service; then
+              echo "Service is running. Restarting..." &&
+              sudo systemctl restart steadfast_websocket.service
+            else
+              echo "Service is not running. Starting..." &&
+              sudo systemctl start steadfast_websocket.service
+            fi
           '
