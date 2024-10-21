@@ -50,12 +50,10 @@ async def print_quote_data():
     while True:
         await asyncio.sleep(PRINT_INTERVAL)
         current_time = time.strftime("%d-%m-%Y %H:%M:%S")
-        logging.debug(f"Quote Data at {current_time}:")
+        print(f"\nQuote Data at {current_time}:")
         for symbol, ltp in quote_data.items():
-            logging.debug(f"{symbol}: {ltp}")
-        logging.debug(f"Total symbols: {len(quote_data)}")
-        logging.debug(f"Raw quote_data: {json.dumps(quote_data, indent=2)}")
-        logging.debug("------------------------")
+            print(f"{symbol}: {ltp}")
+        print("------------------------")
         quote_data.clear()
 
 
