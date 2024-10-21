@@ -3,15 +3,11 @@ import websockets
 import json
 import logging
 from config import SHOONYA_WEBSOCKET_DATA_ENDPOINT, WS_HOST
-
-""" Using the NorenRestApi latest package (NorenRestApiPy is class name, although there is a separate package with the same name NorenRestApiPy - older version, Don't get confused, we don't want NorenRestApiPy old package, we want NorenRestApi)
-This package 'NorenRestApi' has to be installed without it's dependencies, otherwise it will not work, So we have added pip install --no-deps NorenRestApi in install-all.bat file
-DO NOT CHANGE NorenRestApiPy to NorenRestApi """
 from NorenRestApiPy.NorenApi import NorenApi
 import requests
 import time
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 
 # Flag to tell us if the websocket is open
 socket_opened = False

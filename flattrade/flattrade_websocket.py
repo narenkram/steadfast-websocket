@@ -3,15 +3,11 @@ import websockets
 import json
 import logging
 from config import FLATTRADE_WEBSOCKET_DATA_ENDPOINT, WS_HOST
-
-""" Using the NorenRestApi latest package (NorenRestApiPy is class name, although there is a separate package with the same name NorenRestApiPy - older version, Don't get confused, we don't want NorenRestApiPy old package, we want NorenRestApi)
-This package 'NorenRestApi' has to be installed without it's dependencies, otherwise it will not work, So we have added pip install --no-deps NorenRestApi in install-all.bat file
-DO NOT CHANGE NorenRestApiPy to NorenRestApi """
 from NorenRestApiPy.NorenApi import NorenApi
 import requests
 import time
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 
 # Flag to tell us if the websocket is open
 socket_opened = False
@@ -44,6 +40,23 @@ def event_handler_quote_update(message):
 
     # Add the quote to the queue for sending to the client
     asyncio.run_coroutine_threadsafe(quote_queue.put(message), loop)
+
+
+quote_data = {}
+PRINT_INTERVAL = 5  # Print every 5 seconds
+
+
+async def print_quote_data():
+    while True:
+        await asyncio.sleep(PRINT_INTERVAL)
+        current_time = time.strftime("%d-%m-%Y %H:%M:%S")
+        logging.debug(f"Quote Data at {current_time}:")
+        for symbol, ltp in quote_data.items():
+            logging.debug(f"{symbol}: {ltp}")
+        logging.debug(f"Total symbols: {len(quote_data)}")
+        logging.debug(f"Raw quote_data: {json.dumps(quote_data, indent=2)}")
+        logging.debug("------------------------")
+        quote_data.clear()
 
 
 async def get_credentials_and_security_ids():
@@ -102,20 +115,6 @@ def open_callback():
 
 
 quote_queue = asyncio.Queue()
-
-quote_data = {}
-PRINT_INTERVAL = 5  # Print every 5 seconds
-
-
-async def print_quote_data():
-    while True:
-        await asyncio.sleep(PRINT_INTERVAL)
-        current_time = time.strftime("%d-%m-%Y %H:%M:%S")
-        print(f"\nQuote Data at {current_time}:")
-        for symbol, ltp in quote_data.items():
-            print(f"{symbol}: {ltp}")
-        print("------------------------")
-        quote_data.clear()
 
 
 async def websocket_server(websocket, path):
