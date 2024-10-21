@@ -2,7 +2,7 @@ import asyncio
 import websockets
 import json
 import logging
-from config import FLATTRADE_WEBSOCKET_DATA_ENDPOINT, WS_HOST, FLATTRADE_WS_PORT
+from config import FLATTRADE_WEBSOCKET_DATA_ENDPOINT, WS_HOST
 
 """ Using the NorenRestApi latest package (NorenRestApiPy is class name, although there is a separate package with the same name NorenRestApiPy - older version, Don't get confused, we don't want NorenRestApiPy old package, we want NorenRestApi)
 This package 'NorenRestApi' has to be installed without it's dependencies, otherwise it will not work, So we have added pip install --no-deps NorenRestApi in install-all.bat file
@@ -174,12 +174,12 @@ async def handle_websocket_message(websocket, message):
         )
 
 
-async def main():
+async def main(port):
     global loop
     loop = asyncio.get_running_loop()
 
     try:
-        logging.info("Starting Flattrade WebSocket...")
+        logging.info(f"Starting Flattrade WebSocket on port {port}...")
         usersession, userid = await wait_for_data()
         logging.info(
             f"Using usersession: {usersession[:5]}...{usersession[-5:]}, userid: {userid[:2]}....{userid[-2:]}"
@@ -189,7 +189,7 @@ async def main():
         # Create the print_quote_data task
         print_task = asyncio.create_task(print_quote_data())
 
-        server = await websockets.serve(websocket_server, WS_HOST, FLATTRADE_WS_PORT)
+        server = await websockets.serve(websocket_server, WS_HOST, port)
         await server.wait_closed()
     except Exception as e:
         logging.error(f"An error occurred in Flattrade WebSocket: {e}")
@@ -199,4 +199,12 @@ async def main():
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    import sys
+
+    if len(sys.argv) > 1:
+        port = int(sys.argv[1])
+    else:
+        from config import FLATTRADE_WS_PORT
+
+        port = FLATTRADE_WS_PORT
+    asyncio.run(main(port))
