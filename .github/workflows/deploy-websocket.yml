@@ -40,6 +40,7 @@ jobs:
           scp -o StrictHostKeyChecking=no -r ./* ${USER}@${HOST}:/root/steadfast-websocket/
           ssh -o StrictHostKeyChecking=no ${USER}@${HOST} '
             cd /root/steadfast-websocket &&
+            echo "ENV=production" > .env &&
             source venv/bin/activate &&
             pip install -r requirements.txt &&
             sudo systemctl restart steadfast_websocket.service
