@@ -37,8 +37,12 @@ def event_handler_order_update(message):
 
 
 def event_handler_quote_update(message):
-    print(f"quote event: {time.strftime('%d-%m-%Y %H:%M:%S')} {message}")
-    # logging.info(f"Quote update received: {message}")
+    global quote_data
+    symbol = message.get("tk", "Unknown")
+    ltp = message.get("lp", "N/A")
+    quote_data[symbol] = ltp
+
+    # Add the quote to the queue for sending to the client
     asyncio.run_coroutine_threadsafe(quote_queue.put(message), loop)
 
 
@@ -98,6 +102,20 @@ def open_callback():
 
 
 quote_queue = asyncio.Queue()
+
+quote_data = {}
+PRINT_INTERVAL = 5  # Print every 5 seconds
+
+
+async def print_quote_data():
+    while True:
+        await asyncio.sleep(PRINT_INTERVAL)
+        current_time = time.strftime("%d-%m-%Y %H:%M:%S")
+        print(f"\nQuote Data at {current_time}:")
+        for symbol, ltp in quote_data.items():
+            print(f"{symbol}: {ltp}")
+        print("------------------------")
+        quote_data.clear()
 
 
 async def websocket_server(websocket, path):
@@ -167,10 +185,17 @@ async def main():
             f"Using usersession: {usersession[:5]}...{usersession[-5:]}, userid: {userid[:2]}....{userid[-2:]}"
         )
         await setup_api_connection(usersession, userid)
+
+        # Create the print_quote_data task
+        print_task = asyncio.create_task(print_quote_data())
+
         server = await websockets.serve(websocket_server, WS_HOST, FLATTRADE_WS_PORT)
         await server.wait_closed()
     except Exception as e:
         logging.error(f"An error occurred in Flattrade WebSocket: {e}")
+    finally:
+        # Cancel the print_task when the server closes
+        print_task.cancel()
 
 
 if __name__ == "__main__":
