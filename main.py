@@ -17,7 +17,8 @@ load_dotenv()
 # Define broker-specific ports
 BROKER_PORTS = {"flattrade": 8765, "shoonya": 8766}
 
-IPC_PORT = 5000  # Same port as in Node.js server
+MIN_PORT = 5000
+MAX_PORT = 5010
 
 
 class BrokerSelector:
@@ -56,20 +57,24 @@ class BrokerSelector:
         await writer.wait_closed()
 
     async def start_ipc_server(self):
-        server = await asyncio.start_server(self.handle_client, "127.0.0.1", IPC_PORT)
-
-        addr = server.sockets[0].getsockname()
-        print(f"Serving on {addr}")
-
-        async with server:
-            await server.serve_forever()
+        for port in range(MIN_PORT, MAX_PORT + 1):
+            try:
+                server = await asyncio.start_server(
+                    self.handle_client, '127.0.0.1', port)
+                addr = server.sockets[0].getsockname()
+                print(f'Serving on {addr}')
+                return server
+            except OSError:
+                continue
+        raise RuntimeError("No available ports found")
 
 
 async def main():
     broker_selector = BrokerSelector()
 
     # Start the IPC server
-    asyncio.create_task(broker_selector.start_ipc_server())
+    server = await broker_selector.start_ipc_server()
+    asyncio.create_task(server.serve_forever())
 
     print("WebSocket server starting...")
     while not broker_selector.selected_broker:
