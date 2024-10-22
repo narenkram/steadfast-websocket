@@ -42,27 +42,5 @@ jobs:
             cd /root/steadfast-websocket &&
             echo "ENV=production" > .env &&
             source venv/bin/activate &&
-            pip install -r requirements.txt &&
-            
-            echo "Checking if steadfast_websocket service is running..." &&
-            if sudo systemctl is-active --quiet steadfast_websocket.service; then
-              echo "Service is running. Restarting..." &&
-              sudo systemctl restart steadfast_websocket.service
-            else
-              echo "Service is not running. Starting..." &&
-              sudo systemctl start steadfast_websocket.service
-            fi &&
-            
-            echo "Reloading Supervisor configuration..." &&
-            sudo supervisorctl reread &&
-            sudo supervisorctl update &&
-            
-            echo "Checking if steadfast_websocket process is running..." &&
-            if sudo supervisorctl status steadfast_websocket | grep -q "RUNNING"; then
-              echo "Process is running. Restarting..." &&
-              sudo supervisorctl restart steadfast_websocket
-            else
-              echo "Process is not running. Starting..." &&
-              sudo supervisorctl start steadfast_websocket
-            fi
+            pip install -r requirements.txt
           '
