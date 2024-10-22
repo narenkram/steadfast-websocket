@@ -12,20 +12,6 @@ logging.basicConfig(level=logging.DEBUG)
 # Flag to tell us if the websocket is open
 socket_opened = False
 
-# Initialize the API object with required arguments
-try:
-    api = NorenApi(
-        host="https://piconnect.flattrade.in/PiConnectTP/",
-        websocket="wss://piconnect.flattrade.in/PiConnectWSTp/",
-        eodhost="https://web.flattrade.in/chartApi/getdata/",
-    )
-except TypeError:
-    # If 'eodhost' is not accepted, try without it
-    api = NorenApi(
-        host="https://piconnect.flattrade.in/PiConnectTP/",
-        websocket="wss://piconnect.flattrade.in/PiConnectWSTp/",
-    )
-
 
 # Event handlers
 def event_handler_order_update(message):
@@ -168,6 +154,22 @@ async def handle_websocket_message(websocket, message):
         userid = data.get("userid", "")
         print(
             f"Updated credentials and security IDs: {usersession[:5]}...{usersession[-5:]}, {userid[:2]}....{userid[-2:]}"
+        )
+
+
+def initialize_api():
+    global api
+    try:
+        api = NorenApi(
+            host="https://piconnect.flattrade.in/PiConnectTP/",
+            websocket="wss://piconnect.flattrade.in/PiConnectWSTp/",
+            eodhost="https://web.flattrade.in/chartApi/getdata/",
+        )
+    except TypeError:
+        # If 'eodhost' is not accepted, try without it
+        api = NorenApi(
+            host="https://piconnect.flattrade.in/PiConnectTP/",
+            websocket="wss://piconnect.flattrade.in/PiConnectWSTp/",
         )
 
 

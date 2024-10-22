@@ -12,20 +12,6 @@ logging.basicConfig(level=logging.DEBUG)
 # Flag to tell us if the websocket is open
 socket_opened = False
 
-# Initialize the API object with required arguments
-try:
-    api = NorenApi(
-        host="https://api.shoonya.com/NorenWClientTP/",
-        websocket="wss://api.shoonya.com/NorenWSTP/",
-        eodhost="https://api.shoonya.com/chartApi/getdata/",
-    )
-except TypeError:
-    # If 'eodhost' is not accepted, try without it
-    api = NorenApi(
-        host="https://api.shoonya.com/NorenWClientTP/",
-        websocket="wss://api.shoonya.com/NorenWSTP/",
-    )
-
 
 # Event handlers
 def event_handler_order_update(message):
@@ -193,6 +179,22 @@ async def main(port):
     finally:
         # Cancel the print_task when the server closes
         print_task.cancel()
+
+
+def initialize_api():
+    global api
+    try:
+        api = NorenApi(
+            host="https://api.shoonya.com/NorenWClientTP/",
+            websocket="wss://api.shoonya.com/NorenWSTP/",
+            eodhost="https://api.shoonya.com/chartApi/getdata/",
+        )
+    except TypeError:
+        # If 'eodhost' is not accepted, try without it
+        api = NorenApi(
+            host="https://api.shoonya.com/NorenWClientTP/",
+            websocket="wss://api.shoonya.com/NorenWSTP/",
+        )
 
 
 if __name__ == "__main__":
