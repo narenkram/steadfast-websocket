@@ -18,7 +18,7 @@ BROKER_PORTS = {"flattrade": 8765, "shoonya": 8766}
 
 
 async def main():
-    selected_broker = os.getenv("SELECTED_BROKER", "flattrade").lower()
+    selected_broker = os.getenv("SELECTED_BROKER", "").lower()
     print(f"Selected broker from environment: {selected_broker}")
 
     if selected_broker in BROKER_PORTS:
@@ -33,12 +33,8 @@ async def main():
             await shoonya_main(ws_port)
     else:
         print(
-            f"Invalid broker '{selected_broker}' selected. Using default broker 'flattrade'."
+            "No valid broker selected. Please set the SELECTED_BROKER environment variable to 'flattrade' or 'shoonya'."
         )
-        ws_port = BROKER_PORTS["flattrade"]
-        print(f"Starting Flattrade WebSocket on port {ws_port}...")
-        flattrade_initialize_api()
-        await flattrade_main(ws_port)
 
 
 if __name__ == "__main__":
