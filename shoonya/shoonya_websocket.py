@@ -24,8 +24,8 @@ def event_handler_quote_update(message):
     ltp = message.get("lp", "N/A")
     quote_data[symbol] = ltp
 
-    # Add the quote to the queue for sending to the client
-    asyncio.run_coroutine_threadsafe(quote_queue.put(message), loop)
+    # Remove the asyncio.run_coroutine_threadsafe and directly put to queue
+    loop.call_soon_threadsafe(quote_queue.put_nowait, message)
 
 
 quote_data = {}
