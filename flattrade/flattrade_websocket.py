@@ -101,7 +101,7 @@ def open_callback():
 quote_queue = asyncio.Queue()
 
 
-async def websocket_server(websocket, path):
+async def websocket_server(websocket):
     try:
         # Create a task to continuously send quote updates to the client
         send_task = asyncio.create_task(send_quote_updates(websocket))
